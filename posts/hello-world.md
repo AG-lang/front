@@ -4,6 +4,7 @@ date: '2025-08-11'
 excerpt: '这是我博客的第一篇文章，介绍了博客的基本功能和技术栈。'
 author: '博主'
 tags: ['NextJS', '博客', '技术']
+published: true
 ---
 
 # 欢迎来到我的博客

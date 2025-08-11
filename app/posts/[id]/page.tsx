@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getPostData, getAllPostIds } from '@/lib/posts'
+import MarkdownRenderer from '@/components/blog/MarkdownRenderer'
 
 interface PostPageProps {
   params: Promise<{ id: string }>
@@ -13,13 +14,48 @@ export async function generateStaticParams() {
   }))
 }
 
+export async function generateMetadata({ params }: PostPageProps) {
+  const { id } = await params
+  const post = await getPostData(id)
+  
+  if (!post) {
+    return {
+      title: '文章未找到',
+      description: '请检查链接是否正确'
+    }
+  }
+
+  return {
+    title: `${post.title} - 我的博客`,
+    description: post.excerpt,
+    keywords: post.tags,
+    authors: [{ name: post.author }],
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: 'article',
+      publishedTime: post.date,
+      authors: [post.author],
+      tags: post.tags,
+      locale: 'zh_CN',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+    }
+  }
+}
+
 export default async function PostPage({ params }: PostPageProps) {
   const { id } = await params
+  const post = await getPostData(id)
   
-  try {
-    const post = await getPostData(id)
+  if (!post) {
+    notFound()
+  }
     
-    return (
+  return (
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Navigation */}
         <nav className="mb-8">
@@ -40,7 +76,7 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-300 mb-4">
             <span>作者：{post.author}</span>
             <span>•</span>
-            <time>{post.date}</time>
+            <time dateTime={post.date}>{post.date}</time>
           </div>
 
           {post.tags.length > 0 && (
@@ -58,11 +94,9 @@ export default async function PostPage({ params }: PostPageProps) {
         </header>
 
         {/* Article Content */}
-        <article className="prose prose-lg dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-img:rounded-lg prose-img:shadow-md prose-blockquote:border-l-4 prose-blockquote:border-blue-500 prose-blockquote:bg-blue-50 dark:prose-blockquote:bg-blue-900/20 prose-blockquote:py-2 prose-blockquote:px-4 prose-code:bg-gray-100 dark:prose-code:bg-gray-800 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-pre:bg-gray-900 prose-pre:overflow-x-auto prose-table:overflow-x-auto">
-          <div 
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
-        </article>
+        <main id="main-content">
+          <MarkdownRenderer content={post.content} />
+        </main>
 
         {/* Navigation Footer */}
         <footer className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
@@ -75,7 +109,4 @@ export default async function PostPage({ params }: PostPageProps) {
         </footer>
       </div>
     )
-  } catch {
-    notFound()
-  }
 }

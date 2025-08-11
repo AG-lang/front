@@ -4,6 +4,7 @@ date: '2025-08-10'
 excerpt: '深入了解 Next.js 的各种强大功能，包括 App Router、服务端渲染、静态生成等。'
 author: '技术小白'
 tags: ['NextJS', 'React', '前端', 'SSR', 'SSG']
+published: true
 ---
 
 # Next.js 的强大功能

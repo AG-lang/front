@@ -1,9 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
-import { remark } from 'remark'
-import html from 'remark-html'
-import remarkGfm from 'remark-gfm'
+import { postFrontmatterSchema } from './schemas'
 
 const postsDirectory = path.join(process.cwd(), 'posts')
 
@@ -15,43 +13,38 @@ export interface Post {
   content: string
   author: string
   tags: string[]
+  published: boolean
 }
 
 export function getSortedPostsData(): Omit<Post, 'content'>[] {
-  // 获取 posts 目录下的所有文件名
-  const fileNames = fs.readdirSync(postsDirectory)
-  const allPostsData = fileNames
-    .filter(fileName => fileName.endsWith('.md'))
-    .map((fileName) => {
-      // 移除文件名的 ".md" 后缀获得 id
-      const id = fileName.replace(/\.md$/, '')
+  try {
+    const fileNames = fs.readdirSync(postsDirectory)
+    const allPostsData = fileNames
+      .filter(fileName => fileName.endsWith('.md'))
+      .map((fileName) => {
+        const id = fileName.replace(/\.md$/, '')
+        const fullPath = path.join(postsDirectory, fileName)
+        const fileContents = fs.readFileSync(fullPath, 'utf8')
 
-      // 读取文件内容
-      const fullPath = path.join(postsDirectory, fileName)
-      const fileContents = fs.readFileSync(fullPath, 'utf8')
+        const matterResult = matter(fileContents)
+        
+        // 使用 zod 验证 frontmatter 数据
+        const validatedData = postFrontmatterSchema.parse(matterResult.data)
 
-      // 使用 gray-matter 解析文章元数据
-      const matterResult = matter(fileContents)
+        return {
+          id,
+          ...validatedData,
+        } as Omit<Post, 'content'>
+      })
+      .filter(post => post.published) // 只返回已发布的文章
 
-      // 返回数据和 id
-      return {
-        id,
-        title: matterResult.data.title || '',
-        date: matterResult.data.date || '',
-        excerpt: matterResult.data.excerpt || '',
-        author: matterResult.data.author || '匿名',
-        tags: matterResult.data.tags || [],
-      } as Omit<Post, 'content'>
+    return allPostsData.sort((a, b) => {
+      return new Date(b.date).getTime() - new Date(a.date).getTime()
     })
-
-  // 按日期排序
-  return allPostsData.sort((a, b) => {
-    if (a.date < b.date) {
-      return 1
-    } else {
-      return -1
-    }
-  })
+  } catch (error) {
+    console.error('读取文章数据时发生错误:', error)
+    return []
+  }
 }
 
 export function getAllPostIds(): Array<{ params: { id: string } }> {
@@ -67,28 +60,32 @@ export function getAllPostIds(): Array<{ params: { id: string } }> {
     })
 }
 
-export async function getPostData(id: string): Promise<Post> {
-  const fullPath = path.join(postsDirectory, `${id}.md`)
-  const fileContents = fs.readFileSync(fullPath, 'utf8')
+export async function getPostData(id: string): Promise<Post | null> {
+  try {
+    const fullPath = path.join(postsDirectory, `${id}.md`)
+    if (!fs.existsSync(fullPath)) {
+      return null
+    }
+    
+    const fileContents = fs.readFileSync(fullPath, 'utf8')
+    const matterResult = matter(fileContents)
+    
+    // 使用 zod 验证 frontmatter 数据
+    const validatedData = postFrontmatterSchema.parse(matterResult.data)
+    
+    // 如果文章未发布，返回 null
+    if (!validatedData.published) {
+      return null
+    }
 
-  // 使用 gray-matter 解析文章元数据
-  const matterResult = matter(fileContents)
-
-  // 使用 remark 将 markdown 转换为 HTML 字符串
-  const processedContent = await remark()
-    .use(remarkGfm) // 支持 GitHub 风格的 Markdown
-    .use(html, { sanitize: false }) // 允许原始HTML
-    .process(matterResult.content)
-  const contentHtml = processedContent.toString()
-
-  // 合并数据和 id 以及内容
-  return {
-    id,
-    title: matterResult.data.title || '',
-    date: matterResult.data.date || '',
-    excerpt: matterResult.data.excerpt || '',
-    author: matterResult.data.author || '匿名',
-    tags: matterResult.data.tags || [],
-    content: contentHtml,
+    // 直接返回原始 Markdown 内容，由客户端组件处理渲染
+    return {
+      id,
+      ...validatedData,
+      content: matterResult.content,
+    }
+  } catch (error) {
+    console.error(`读取文章 ${id} 时发生错误:`, error)
+    return null
   }
 }
