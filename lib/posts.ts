@@ -3,6 +3,7 @@ import path from 'path'
 import matter from 'gray-matter'
 import { remark } from 'remark'
 import html from 'remark-html'
+import remarkGfm from 'remark-gfm'
 
 const postsDirectory = path.join(process.cwd(), 'posts')
 
@@ -75,7 +76,8 @@ export async function getPostData(id: string): Promise<Post> {
 
   // 使用 remark 将 markdown 转换为 HTML 字符串
   const processedContent = await remark()
-    .use(html)
+    .use(remarkGfm) // 支持 GitHub 风格的 Markdown
+    .use(html, { sanitize: false }) // 允许原始HTML
     .process(matterResult.content)
   const contentHtml = processedContent.toString()
 
