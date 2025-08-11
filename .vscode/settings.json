@@ -1,0 +1,97 @@
+// ~/.config/Code/User/settings.json
+{
+  // =================================================================
+  //  核心编辑器配置 (Core Editor Settings)
+  // =================================================================
+  "editor.formatOnSave": true,
+  "files.autoSave": "afterDelay",
+  "files.eol": "\n", // 强制 LF, 避免跨平台换行问题
+  "editor.fontFamily": "Fira Code, Cascadia Code, JetBrains Mono, Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontLigatures": true, // 开启字体连字，美化代码符号
+  "editor.renderWhitespace": "boundary", // 高亮行尾多余的空格
+  "breadcrumbs.enabled": true, // 显示面包屑导航
+  "editor.guides.bracketPairs": "active", // 高亮匹配的括号
+  "editor.rulers": [
+    88, // Python (Black/Ruff 风格)
+    120 // 通用参考线
+  ],
+
+  // =================================================================
+  //  文件浏览器与终端 (Explorer & Terminal)
+  // =================================================================
+  "files.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true,
+    "**/.venv": true
+  },
+  "python.defaultInterpreterPath": ".venv/Scripts/python.exe", // Windows
+  // "python.defaultInterpreterPath": ".venv/bin/python", // macOS/Linux
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.profiles.windows": {
+    "Command Prompt": {
+      "path": "cmd.exe",
+      "args": ["/K", "chcp 65001 > nul"]
+    }
+  },
+
+  // =================================================================
+  //  全局格式化与代码修复 (Global Formatting & Actions)
+  // =================================================================
+  // 将 Prettier 设为绝大部分文件的【默认】格式化工具
+  // "editor.defaultFormatter": "esbenp.prettier-vscode",
+  // 在保存时，自动修复 ESLint 和 Markdownlint 的问题
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll.markdownlint": "explicit"
+  },
+
+  // =================================================================
+  //  特定语言配置 (Language-Specific Overrides)
+  // =================================================================
+
+  //-------------- Python (由 Ruff 统治) --------------
+  "[python]": {
+    // 1. 指定 Black Formatter 为 Python 文件的默认格式化工具
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    // 2. 在保存时，执行 Ruff 的所有修复动作
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    }
+  },
+
+  // -------------- Web 开发 (由 Prettier + ESLint 统治) --------------
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // =================================================================
+  //  Git 集成 (Git Integration)
+  // =================================================================
+  "git.autofetch": true,
+  "git.confirmSync": true
+}
